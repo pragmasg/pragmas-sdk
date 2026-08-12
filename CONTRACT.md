@@ -51,12 +51,12 @@ Source: `backend/routers/waitlist.py`. No auth required.
 > Fixed backend-side on branch `fix/backend-english-responses`, not yet merged to
 > `fase-a-fixes`/deployed — the shape above is the corrected one this SDK targets.
 
-## 🟡 `POST /auth/beta-key` — planned (GTM plan Phase 0)
+## 🟡 `POST /auth/beta-key` — implemented, not merged/deployed
 
 Free, unauthenticated-except-for-email issuance of a bearer token for CLI/SDK
-use during the technical-feedback beta. **Not gated by a paid plan** — see the
-GTM plan's "beta key" decision. Modeled after the existing `TokenResponse`
-shape in `backend/routers/auth.py` for consistency.
+use during the technical-feedback beta. **Not gated by a paid plan.** Modeled
+after the existing `TokenResponse` shape in `backend/routers/auth.py` for
+consistency.
 
 ```
 POST /auth/beta-key
@@ -66,6 +66,15 @@ POST /auth/beta-key
 ```
 
 Subsequent authenticated calls send `Authorization: Bearer <beta_key>`.
+
+**Status as of 2026-08-12**: code exists (`noname` repo, PR #17,
+`feat/beta-key-endpoint`, not yet merged to `fase-a-fixes`) and is verified
+working — `pragmas login` tested end-to-end against a locally-run backend,
+got a real `201` and a real key. Still 🟡 here because this SDK's default
+`base_url` (`https://api.pragmas.io`) doesn't serve this yet — Railway
+(production) has been down since 2026-08-01. Point `PragmasClient` at
+`http://127.0.0.1:8765` (or pass `--base-url` to `pragmas login`) against a
+local backend checkout to use it today.
 
 ## Not yet in this SDK
 
