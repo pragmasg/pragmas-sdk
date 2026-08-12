@@ -1,13 +1,25 @@
-"""Synchronous client for the PRAGMAS API.
+"""Client for the PRAGMAS SDK.
 
-See CONTRACT.md for exactly which endpoints are live in production today
-versus planned — the docstring on each method repeats that status so it's
-visible from `help(client.analyze)` too, not just in the repo.
+`analyze()` and `market()` run entirely on your machine — no network call to
+any PRAGMAS server, no account, no beta key. `join_waitlist()` and
+`request_beta_key()` are the only two methods that talk to the real backend
+(see CONTRACT.md for their exact status). See the package docstring in
+`pragmas_sdk.analysis` for why `analyze()` is local by design, not just for
+now: it's deterministic financial math with no proprietary model behind it,
+so there's no reason to route it through a server at all — doing so would
+only add latency, a network dependency, and cost for something that runs
+just as well, more privately, on your own machine.
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
+from pathlib import Path
+from tempfile import mkdtemp
+from typing import Any
+
 import httpx
 
+from pragmas_sdk.analysis import run_module
 from pragmas_sdk.exceptions import (
     PragmasAPIError,
     PragmasAuthError,
@@ -16,21 +28,22 @@ from pragmas_sdk.exceptions import (
     PragmasNotImplementedError,
     PragmasRateLimitError,
 )
-from pragmas_sdk.models import AnalysisResult, BetaKey, MarketResult, WaitlistResult
+from pragmas_sdk.models import AnalysisResult, BetaKey, MarketResult, MarketSource, WaitlistResult
 
 DEFAULT_BASE_URL = "https://api.pragmas.io"
 
 
 class PragmasClient:
-    """Client for the PRAGMAS API.
+    """Client for the PRAGMAS API and its local analysis templates.
 
     Args:
-        base_url: API root. Defaults to production; point at
-            `http://127.0.0.1:8765` for local backend development.
-        beta_key: Bearer token from `request_beta_key()`. Optional — only
-            required for endpoints that touch a specific account/project
-            (`analyze`). Not required for `join_waitlist` or `market`.
-        timeout: Request timeout in seconds.
+        base_url: API root, only used by `join_waitlist`/`request_beta_key`.
+            Defaults to production; point at `http://127.0.0.1:8765` for
+            local backend development.
+        beta_key: Bearer token from `request_beta_key()`. Not required for
+            anything in this SDK today — kept for the future `ask`/`ingest`/
+            `generate_report` methods, which will need it once they ship.
+        timeout: Request timeout in seconds, for the two network methods.
     """
 
     def __init__(
@@ -82,7 +95,7 @@ class PragmasClient:
             raise PragmasAPIError(resp.status_code, detail)
         return resp
 
-    # ── 🟢 live today ──────────────────────────────────────────────
+    # ── 🟢 live today, over the network ───────────────────────────
 
     def join_waitlist(self, email: str) -> WaitlistResult:
         """Join the PRAGMAS waitlist. Live in production — no auth needed.
@@ -92,55 +105,77 @@ class PragmasClient:
         resp = self._request("POST", "/waitlist", json={"email": email})
         return WaitlistResult.model_validate(resp.json())
 
-    # ── 🟡 planned, targets the documented-but-not-yet-shipped contract ──
-
     def request_beta_key(self, email: str) -> BetaKey:
-        """Request a free beta key for CLI/SDK access.
+        """Request a free beta key for the future `ask`/`ingest`/`generate_report`.
 
-        Planned endpoint — see CONTRACT.md `POST /auth/beta-key`. Will raise
-        `PragmasConnectionError`/`PragmasNotFoundError` against today's
-        production backend until that endpoint ships (GTM plan Phase 0).
-        Not gated by a paid plan: no scopes, no billing limits.
+        Planned endpoint — see CONTRACT.md `POST /auth/beta-key`. Not needed
+        for `analyze()` or `market()`, which run locally. Not gated by a
+        paid plan: no scopes, no billing limits.
         """
         resp = self._request("POST", "/auth/beta-key", json={"email": email})
         key = BetaKey.model_validate(resp.json())
         self.beta_key = key.beta_key
         return key
 
-    def analyze(self, project_id: str, template: str, params: dict | None = None) -> AnalysisResult:
-        """Run a deterministic analysis template against a project's data.
+    # ── 🟢 local — no network, no account ─────────────────────────
 
-        No LLM in the loop — calls `backend/services/analysis_modules/`
-        directly once the endpoint ships. Planned — see CONTRACT.md
-        `POST /projects/{project_id}/analyze`. Requires a beta key.
+    def analyze(
+        self,
+        input_csv: str,
+        template: str,
+        params: dict[str, Any] | None = None,
+        output_dir: str | None = None,
+    ) -> AnalysisResult:
+        """Run a deterministic analysis template against a local CSV.
+
+        Runs entirely on your machine via `pragmas_sdk.analysis` — no
+        network call, no account. Never raises for bad input or an unknown
+        template; check `result.success`/`result.error` instead, same as
+        every function in `pragmas_sdk.analysis` already does.
 
         Args:
-            project_id: The project to analyze.
+            input_csv: Path to a local CSV file.
             template: One of `ecommerce_unit_economics`, `saas_metrics`,
                 `cash_flow_13w`, or `r:seasonality` / `r:outliers` /
-                `r:correlations` (the `r:*` templates need R installed on
-                the backend host and degrade the same way the backend's own
-                test suite already does when it isn't).
-            params: Template-specific parameters, forwarded as-is.
+                `r:correlations` (the `r:*` templates need `Rscript`
+                installed locally; everything else doesn't).
+            params: Template-specific parameters.
+            output_dir: Where to write `results.json` and any charts.
+                Defaults to a fresh temp directory (the path is on
+                `result.charts` either way).
         """
-        resp = self._request(
-            "POST",
-            f"/projects/{project_id}/analyze",
-            json={"template": template, "params": params or {}},
-            headers=self._auth_headers(),
-        )
-        return AnalysisResult.model_validate(resp.json())
+        out_dir = Path(output_dir) if output_dir else Path(mkdtemp(prefix="pragmas_analysis_"))
+        result = run_module(template, input_csv, params or {}, out_dir)
+        return AnalysisResult.model_validate(result)
 
     def market(self, topic: str, max_results: int = 5) -> MarketResult:
-        """Search public/macro information on a topic.
+        """Search public information on a topic.
 
-        Wraps the agent's real `web_search` tool (DuckDuckGo-backed, no API
-        key) — touches no tenant data, so it's the one call in this SDK that
-        doesn't need a beta key. Planned — see CONTRACT.md `GET /market`
-        (today that path is a hardcoded stub in production).
+        Runs locally via DuckDuckGo (no API key) — no network call to any
+        PRAGMAS server, no account, touches no tenant data. Never raises on
+        a failed search; check `result.error` instead.
         """
-        resp = self._request("GET", "/market", params={"topic": topic, "max_results": max_results})
-        return MarketResult.model_validate(resp.json())
+        generated_at = datetime.now(timezone.utc).isoformat()
+        try:
+            from ddgs import DDGS
+
+            raw = list(DDGS().text(topic, max_results=max_results))
+        except Exception as exc:  # noqa: BLE001 — never crash the caller
+            return MarketResult(
+                topic=topic, summary="", sources=[], generated_at=generated_at,
+                error=f"Search failed: {exc}",
+            )
+
+        sources = [
+            MarketSource(
+                title=r.get("title", ""),
+                url=r.get("href", ""),
+                snippet=(r.get("body") or "")[:500],
+            )
+            for r in raw
+        ]
+        summary = sources[0].snippet if sources else ""
+        return MarketResult(topic=topic, summary=summary, sources=sources, generated_at=generated_at)
 
     # ── not in this SDK yet — see CONTRACT.md "Not yet in this SDK" ──
 

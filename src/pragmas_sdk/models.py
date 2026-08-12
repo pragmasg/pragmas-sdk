@@ -1,5 +1,7 @@
-"""Response models. Mirrors the shapes documented in CONTRACT.md exactly —
-if the backend contract changes, update both together.
+"""Response models. `AnalysisResult` mirrors the dict shape every function in
+`pragmas_sdk.analysis` returns — keep them in sync. `WaitlistResult`/`BetaKey`
+mirror CONTRACT.md's documented backend contract instead, since those two
+still go over the network.
 """
 from __future__ import annotations
 
@@ -38,3 +40,4 @@ class MarketResult(BaseModel):
     summary: str
     sources: list[MarketSource] = []
     generated_at: str | None = None
+    error: str | None = None

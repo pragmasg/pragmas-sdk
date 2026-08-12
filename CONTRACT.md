@@ -1,12 +1,38 @@
 # API contract
 
-This SDK talks to the PRAGMAS backend (`noname` repo, private). This document is
-the single source of truth for which endpoints it calls, their shape, and —
-critically — **which of them exist in production today versus which are planned**.
-Keep this in sync with the backend as each endpoint actually ships; don't let the
-SDK claim more than the backend can deliver.
+Most of this SDK doesn't talk to a backend at all — `analyze()` and `market()`
+run entirely on your machine (see below). The two methods that do
+(`join_waitlist`, `request_beta_key`) hit the PRAGMAS backend (`noname` repo,
+private), and this document is the source of truth for their exact shape and
+— critically — **which of them exist in production today versus which are
+planned**. Keep this in sync with the backend as each endpoint actually ships;
+don't let the SDK claim more than the backend can deliver.
 
-Status legend: 🟢 live today · 🟡 planned, not yet implemented backend-side.
+Status legend: 🟢 live/works today · 🟡 planned, not yet implemented backend-side.
+
+## 🟢 `analyze()` and `market()` — local, no backend contract at all
+
+These don't call any PRAGMAS server, so there's no endpoint to document here —
+that's the point. `analyze()` runs `pragmas_sdk.analysis` (vendored from the
+backend's `services/analysis_modules/`, kept in sync by hand) directly on your
+machine: deterministic pandas/R financial math, no proprietary model behind
+it, so routing it through a server would only add latency, a network
+dependency, and cost for no benefit. `market()` calls DuckDuckGo directly (no
+API key) from wherever the code runs — same reasoning, plus it never touches
+tenant data, so there was never a reason to put a PRAGMAS server in the
+middle.
+
+Practical effect: neither needs a beta key, and both work with the backend
+completely down (a real backend endpoint for `analyze`-equivalent
+functionality may still exist someday for the *web app*, whose browser users
+can't run local Python — but that's a separate, later decision, unrelated to
+this SDK).
+
+Dependencies this pulls in that a pure network-only client wouldn't need:
+`pandas`, `matplotlib` (both required), `ddgs` (required), and
+`Rscript` installed *locally* for the `r:*` templates only (optional —
+everything else works without it, and `r:*` degrades to a clear error if it's
+missing, same as the old server-side version used to).
 
 ## 🟢 `POST /waitlist` — live today
 
@@ -41,54 +67,6 @@ POST /auth/beta-key
 
 Subsequent authenticated calls send `Authorization: Bearer <beta_key>`.
 
-## 🟡 `POST /projects/{project_id}/analyze` — planned (GTM plan Phase 1)
-
-Invokes `backend/services/analysis_modules/` directly — deterministic, no LLM
-in the loop. The module contract already exists and is tested
-(`backend/tests/analysis/test_analysis_modules.py`); this endpoint is the first
-thing that calls it over HTTP.
-
-```
-POST /projects/{project_id}/analyze
-Authorization: Bearer <beta_key>
-{ "template": "cashflow-13w", "params": {} }
-
-200 {
-  "success": true,
-  "module": "cash_flow_13w",
-  "results": { ... },
-  "charts": ["..."],
-  "error": null
-}
-```
-
-`template` is one of `list_modules()` from `analysis_modules/__init__.py`:
-`ecommerce_unit_economics`, `saas_metrics`, `cash_flow_13w`, or `r:<name>` for
-the R-backed templates (`r:seasonality`, `r:outliers`, `r:correlations` —
-these require `Rscript` on the backend host and degrade the same way the
-existing test suite already does when R isn't installed).
-
-## 🟡 `GET /market` — planned (GTM plan Phase 1, replaces the existing stub)
-
-`GET /market` already exists in `backend/routers/analytics.py` but is a
-hardcoded stub (`{"trends": [], "insights": [], "last_updated": None}`). This
-contract is what it should become: a thin wrapper over the `web_search` agent
-tool (DuckDuckGo-backed, no API key), safe to expose publicly since it touches
-no tenant data.
-
-```
-GET /market?topic=...&max_results=5
-
-200 {
-  "topic": "...",
-  "summary": "...",
-  "sources": [{ "title": "...", "url": "...", "snippet": "..." }],
-  "generated_at": "2026-08-01T00:00:00Z"
-}
-```
-
-No auth required (candidate for the CLI's zero-friction command — see GTM plan).
-
 ## Not yet in this SDK
 
 `projects`, `documents`/ingest, `agent`/`ask` (streaming), `reports` all have
@@ -97,3 +75,11 @@ scoped to a later pass once the beta-key auth flow above is live and the
 agent/RAG path has been verified end-to-end in production (it hasn't, as of
 this writing — Railway has been down). Wrapping them before that would ship
 client methods nobody can actually use yet.
+
+## History
+
+`analyze()`/`market()` were originally designed as planned backend endpoints
+(`POST /projects/{id}/analyze`, `GET /market`) — see git history if you want
+that version. Moved to local execution instead once it became clear a public,
+zero-auth `/market` and a per-call-billed `/analyze` were real cost/abuse
+surface for no actual benefit (neither needs a server to do its job).
