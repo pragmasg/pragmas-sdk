@@ -239,6 +239,15 @@ templates' sandboxing/whitelist/error paths are tested without R, and a real
 `request_beta_key` tests mock the HTTP layer with
 [`respx`](https://lundberg.github.io/respx/) — no live backend required.
 
+## Contributing
+
+New analysis templates, bug fixes, and docs improvements are welcome.
+Connectors and other new extension points aren't formalized yet — open an
+issue before writing one. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the
+full guide: what's open today, dev setup, and the PR process.
+[`pragmas-cli`](https://github.com/pragmasg/pragmas-cli) has its own
+`CONTRIBUTING.md` for command/UX-level contributions.
+
 ## License
 
 MIT — see [LICENSE](./LICENSE).
