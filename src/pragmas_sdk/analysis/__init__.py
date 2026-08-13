@@ -22,6 +22,8 @@ Python templates (pandas/numpy/matplotlib):
         sales cycle length, per-stage weighted forecast.
     burn_rate_runway — monthly burn rate, cash runway, and
         base/optimistic/pessimistic scenario projections.
+    cohort_analysis — generic cohort retention (revenue + customer) for
+        any recurring-revenue business, no product/channel/CAC needed.
 
 R templates (Rscript subprocess, ONLY fixed whitelisted templates — never
 arbitrary code, same philosophy as the Python ones):
@@ -35,6 +37,7 @@ from pragmas_sdk.analysis.cash_flow_13w import run_cash_flow_13w
 from pragmas_sdk.analysis.data_profile import run_data_profile
 from pragmas_sdk.analysis.sales_pipeline import run_sales_pipeline
 from pragmas_sdk.analysis.burn_rate_runway import run_burn_rate_runway
+from pragmas_sdk.analysis.cohort_analysis import run_cohort_analysis
 from pragmas_sdk.analysis.r_runner import run_r_analysis, R_TEMPLATES, r_available
 
 MODULES = {
@@ -44,6 +47,7 @@ MODULES = {
     "data_profile": run_data_profile,
     "sales_pipeline": run_sales_pipeline,
     "burn_rate_runway": run_burn_rate_runway,
+    "cohort_analysis": run_cohort_analysis,
 }
 
 
@@ -83,6 +87,7 @@ __all__ = [
     "run_data_profile",
     "run_sales_pipeline",
     "run_burn_rate_runway",
+    "run_cohort_analysis",
     "run_r_analysis",
     "r_available",
 ]
