@@ -14,6 +14,16 @@ Python templates (pandas/numpy/matplotlib):
     saas_metrics — MRR bridge, customer vs revenue churn, CAC payback,
         LTV/CAC, Rule of 40.
     cash_flow_13w — 13-week cash flow projection.
+    data_profile — generic CSV profiler (no fixed required columns):
+        per-column missing/unique/inferred type, duplicate rows,
+        numeric correlation matrix, IQR outlier counts.
+    sales_pipeline — CRM deals pipeline: win rate, avg deal size, pipeline
+        coverage, sales velocity, stage conversion (snapshot funnel),
+        sales cycle length, per-stage weighted forecast.
+    burn_rate_runway — monthly burn rate, cash runway, and
+        base/optimistic/pessimistic scenario projections.
+    cohort_analysis — generic cohort retention (revenue + customer) for
+        any recurring-revenue business, no product/channel/CAC needed.
     board_report — curated board-ready summary view over saas_metrics
         (same input, same params, no new math).
 
@@ -27,12 +37,20 @@ from pragmas_sdk.analysis.board_report import run_board_report
 from pragmas_sdk.analysis.ecommerce_unit_economics import run_ecommerce_unit_economics
 from pragmas_sdk.analysis.saas_metrics import run_saas_metrics
 from pragmas_sdk.analysis.cash_flow_13w import run_cash_flow_13w
+from pragmas_sdk.analysis.data_profile import run_data_profile
+from pragmas_sdk.analysis.sales_pipeline import run_sales_pipeline
+from pragmas_sdk.analysis.burn_rate_runway import run_burn_rate_runway
+from pragmas_sdk.analysis.cohort_analysis import run_cohort_analysis
 from pragmas_sdk.analysis.r_runner import run_r_analysis, R_TEMPLATES, r_available
 
 MODULES = {
     "ecommerce_unit_economics": run_ecommerce_unit_economics,
     "saas_metrics": run_saas_metrics,
     "cash_flow_13w": run_cash_flow_13w,
+    "data_profile": run_data_profile,
+    "sales_pipeline": run_sales_pipeline,
+    "burn_rate_runway": run_burn_rate_runway,
+    "cohort_analysis": run_cohort_analysis,
     "board_report": run_board_report,
 }
 
@@ -70,6 +88,10 @@ __all__ = [
     "run_ecommerce_unit_economics",
     "run_saas_metrics",
     "run_cash_flow_13w",
+    "run_data_profile",
+    "run_sales_pipeline",
+    "run_burn_rate_runway",
+    "run_cohort_analysis",
     "run_board_report",
     "run_r_analysis",
     "r_available",
