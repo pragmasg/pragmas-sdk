@@ -20,6 +20,8 @@ Python templates (pandas/numpy/matplotlib):
     sales_pipeline — CRM deals pipeline: win rate, avg deal size, pipeline
         coverage, sales velocity, stage conversion (snapshot funnel),
         sales cycle length, per-stage weighted forecast.
+    burn_rate_runway — monthly burn rate, cash runway, and
+        base/optimistic/pessimistic scenario projections.
 
 R templates (Rscript subprocess, ONLY fixed whitelisted templates — never
 arbitrary code, same philosophy as the Python ones):
@@ -32,6 +34,7 @@ from pragmas_sdk.analysis.saas_metrics import run_saas_metrics
 from pragmas_sdk.analysis.cash_flow_13w import run_cash_flow_13w
 from pragmas_sdk.analysis.data_profile import run_data_profile
 from pragmas_sdk.analysis.sales_pipeline import run_sales_pipeline
+from pragmas_sdk.analysis.burn_rate_runway import run_burn_rate_runway
 from pragmas_sdk.analysis.r_runner import run_r_analysis, R_TEMPLATES, r_available
 
 MODULES = {
@@ -40,6 +43,7 @@ MODULES = {
     "cash_flow_13w": run_cash_flow_13w,
     "data_profile": run_data_profile,
     "sales_pipeline": run_sales_pipeline,
+    "burn_rate_runway": run_burn_rate_runway,
 }
 
 
@@ -78,6 +82,7 @@ __all__ = [
     "run_cash_flow_13w",
     "run_data_profile",
     "run_sales_pipeline",
+    "run_burn_rate_runway",
     "run_r_analysis",
     "r_available",
 ]
