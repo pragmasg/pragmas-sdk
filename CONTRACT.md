@@ -14,8 +14,11 @@ Status legend: 🟢 live/works today · 🟡 planned, not yet implemented backen
 
 These don't call any PRAGMAS server, so there's no endpoint to document here —
 that's the point. `analyze()` runs `pragmas_sdk.analysis` (vendored from the
-backend's `services/analysis_modules/`, kept in sync by hand) directly on your
-machine: deterministic pandas/R financial math, no proprietary model behind
+backend's `services/analysis_modules/` — the backend copy is kept in parity
+by a CI check on the `noname` repo, `.github/workflows/template-parity.yml`,
+added 2026-08-13, that fails a PR if a template exists in this SDK but isn't
+mirrored backend-side) directly on your machine: deterministic pandas/R
+financial math, no proprietary model behind
 it, so routing it through a server would only add latency, a network
 dependency, and cost for no benefit. `market()` calls DuckDuckGo directly (no
 API key) from wherever the code runs — same reasoning, plus it never touches
@@ -48,8 +51,10 @@ Source: `backend/routers/waitlist.py`. No auth required.
 
 > **Note:** this endpoint's responses used to be hardcoded Spanish (`"Email no
 > válido"`, `"Te avisaremos..."`) even though this SDK/CLI pair is English-only.
-> Fixed backend-side on branch `fix/backend-english-responses`, not yet merged to
-> `fase-a-fixes`/deployed — the shape above is the corrected one this SDK targets.
+> Fixed backend-side, **merged to `master`** (confirmed 2026-08-13 — the shape
+> above is what `noname`'s `backend/routers/waitlist.py` actually returns
+> today) — still not *deployed*, though: Railway (production) has been down
+> since 2026-08-01, so `https://api.pragmas.io` doesn't serve this fix yet.
 
 ## 🟡 `POST /auth/beta-key` — implemented, not merged/deployed
 
@@ -67,12 +72,14 @@ POST /auth/beta-key
 
 Subsequent authenticated calls send `Authorization: Bearer <beta_key>`.
 
-**Status as of 2026-08-12**: code exists (`noname` repo, PR #17,
-`feat/beta-key-endpoint`, not yet merged to `fase-a-fixes`) and is verified
-working — `pragmas login` tested end-to-end against a locally-run backend,
-got a real `201` and a real key. Still 🟡 here because this SDK's default
-`base_url` (`https://api.pragmas.io`) doesn't serve this yet — Railway
-(production) has been down since 2026-08-01. Point `PragmasClient` at
+**Status as of 2026-08-13**: code exists (`noname` repo, PR #17,
+`feat/beta-key-endpoint`) and is **merged to `master`** (confirmed
+2026-08-13 — was previously only merged to `fase-a-fixes`, that release PR
+has since landed too) and is verified working — `pragmas login` tested
+end-to-end against a locally-run backend, got a real `201` and a real key.
+Still 🟡 here because this SDK's default `base_url`
+(`https://api.pragmas.io`) doesn't serve this yet — Railway (production)
+has been down since 2026-08-01. Point `PragmasClient` at
 `http://127.0.0.1:8765` (or pass `--base-url` to `pragmas login`) against a
 local backend checkout to use it today.
 
