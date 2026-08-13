@@ -24,6 +24,8 @@ Python templates (pandas/numpy/matplotlib):
         base/optimistic/pessimistic scenario projections.
     cohort_analysis — generic cohort retention (revenue + customer) for
         any recurring-revenue business, no product/channel/CAC needed.
+    board_report — curated board-ready summary view over saas_metrics
+        (same input, same params, no new math).
 
 R templates (Rscript subprocess, ONLY fixed whitelisted templates — never
 arbitrary code, same philosophy as the Python ones):
@@ -31,6 +33,7 @@ arbitrary code, same philosophy as the Python ones):
     Rscript installed locally; everything else in this package doesn't.
 """
 
+from pragmas_sdk.analysis.board_report import run_board_report
 from pragmas_sdk.analysis.ecommerce_unit_economics import run_ecommerce_unit_economics
 from pragmas_sdk.analysis.saas_metrics import run_saas_metrics
 from pragmas_sdk.analysis.cash_flow_13w import run_cash_flow_13w
@@ -48,6 +51,7 @@ MODULES = {
     "sales_pipeline": run_sales_pipeline,
     "burn_rate_runway": run_burn_rate_runway,
     "cohort_analysis": run_cohort_analysis,
+    "board_report": run_board_report,
 }
 
 
@@ -88,6 +92,7 @@ __all__ = [
     "run_sales_pipeline",
     "run_burn_rate_runway",
     "run_cohort_analysis",
+    "run_board_report",
     "run_r_analysis",
     "r_available",
 ]
