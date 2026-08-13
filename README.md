@@ -85,9 +85,24 @@ yourself) · ⚪ no backend contract targeted yet in this SDK.
 - `saas_metrics`
 - `ecommerce_unit_economics`
 - `cash_flow_13w`
+- `data_profile` — generic CSV profiler (no fixed required columns):
+  missing values, duplicates, inferred column types, correlations, IQR
+  outliers
+- `sales_pipeline` — CRM deals pipeline: win rate, avg deal size, sales
+  velocity, stage conversion, sales cycle, forecast
+- `burn_rate_runway` — monthly burn, cash runway, scenario projections
+- `cohort_analysis` — generic revenue/customer cohort retention for any
+  recurring-revenue business
+- `board_report` — curated board-ready summary composed from
+  `saas_metrics` (no new math, same input)
 - `r:seasonality`, `r:outliers`, `r:correlations` — R-backed, require
   `Rscript` **installed on your own machine** (everything else needs nothing
   beyond `pip install`)
+
+Full list with descriptions and required columns:
+`pragmas templates` / `pragmas templates show <name>` (via
+[`pragmas-cli`](https://github.com/pragmasg/pragmas-cli)), or
+`pragmas_sdk.analysis.list_modules()`.
 
 Never raises on bad input, an unknown template, or missing `Rscript` — check
 `result.success`/`result.error` instead:
@@ -137,15 +152,16 @@ purpose-built, named connectors — no generic config, just
 model well enough to map it straight into `ecommerce_unit_economics`,
 `saas_metrics`, and the rest without you writing any mapping code:
 
-- **Salesforce** — pipeline and deal data
-- **Google Analytics 4** — traffic and conversion data
 - **Shopify** — orders, products, and customers, straight into
-  `ecommerce_unit_economics`
-- **WordPress** — content and traffic data
+  `ecommerce_unit_economics` — [demand issue #1](https://github.com/pragmasg/pragmas-sdk/issues/1)
+- **HubSpot** — deals, contacts, pipeline stages — [demand issue #2](https://github.com/pragmasg/pragmas-sdk/issues/2)
+- **Google Analytics 4** — traffic and conversion data — [demand issue #3](https://github.com/pragmasg/pragmas-sdk/issues/3)
+- **Salesforce** — pipeline and deal data — [demand issue #4](https://github.com/pragmasg/pragmas-sdk/issues/4)
 
 Exact shape (local, like `analyze()`/`market()`, or backend-assisted for the
-platforms that need OAuth) isn't decided yet.
-[Tell us which one you'd actually use first](https://github.com/pragmasg/pragmas-cli/issues).
+platforms that need OAuth) isn't decided yet — no `Connector` interface is
+designed until one of the issues above shows real demand. Tell us which one
+you'd actually use, and what you'd run afterwards, on the issue itself.
 
 ## Response shapes
 
