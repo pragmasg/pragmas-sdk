@@ -17,6 +17,9 @@ Python templates (pandas/numpy/matplotlib):
     data_profile — generic CSV profiler (no fixed required columns):
         per-column missing/unique/inferred type, duplicate rows,
         numeric correlation matrix, IQR outlier counts.
+    sales_pipeline — CRM deals pipeline: win rate, avg deal size, pipeline
+        coverage, sales velocity, stage conversion (snapshot funnel),
+        sales cycle length, per-stage weighted forecast.
 
 R templates (Rscript subprocess, ONLY fixed whitelisted templates — never
 arbitrary code, same philosophy as the Python ones):
@@ -28,6 +31,7 @@ from pragmas_sdk.analysis.ecommerce_unit_economics import run_ecommerce_unit_eco
 from pragmas_sdk.analysis.saas_metrics import run_saas_metrics
 from pragmas_sdk.analysis.cash_flow_13w import run_cash_flow_13w
 from pragmas_sdk.analysis.data_profile import run_data_profile
+from pragmas_sdk.analysis.sales_pipeline import run_sales_pipeline
 from pragmas_sdk.analysis.r_runner import run_r_analysis, R_TEMPLATES, r_available
 
 MODULES = {
@@ -35,6 +39,7 @@ MODULES = {
     "saas_metrics": run_saas_metrics,
     "cash_flow_13w": run_cash_flow_13w,
     "data_profile": run_data_profile,
+    "sales_pipeline": run_sales_pipeline,
 }
 
 
@@ -72,6 +77,7 @@ __all__ = [
     "run_saas_metrics",
     "run_cash_flow_13w",
     "run_data_profile",
+    "run_sales_pipeline",
     "run_r_analysis",
     "r_available",
 ]
