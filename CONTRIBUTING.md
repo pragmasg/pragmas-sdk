@@ -5,43 +5,33 @@ not to touch, and what to expect before you spend time on a PR.
 
 ## Where this fits
 
-`pragmas-sdk` is the open-source client for [PRAGMAS](https://pragmas.io).
-The product's differential logic — RAG, LangGraph, the agent, orchestration —
-lives in a **private** repo (`noname`) that this repo has no access to and
-never will. You don't need to know how any of that works to contribute here,
-and PRs that try to reverse-engineer or reimplement it are out of scope.
+`pragmas-sdk` is the open-source client for the local, deterministic parts
+of [PRAGMAS](https://pragmas.io): analysis templates and public-research
+search. It does not include the hosted AI agent, document ingestion, or
+report generation — those aren't part of this repo, and PRs that try to
+reverse-engineer or reimplement them here are out of scope.
 
-`CONTRACT.md` is the source of truth for what's actually live in production
-versus planned — read it before assuming an endpoint exists.
+`CONTRACT.md` documents which methods are implemented here versus planned —
+check it before assuming a method exists.
 [`pragmas-cli`](https://github.com/pragmasg/pragmas-cli) is a separate repo
 built on top of this SDK; if what you want to add is a terminal command or
 UX improvement rather than a Python capability, it belongs there instead.
 
-## Where we are right now
+## Scope right now
 
-We're deliberately **not** trying to open-source the whole product — just
-its extension surface, and we're doing that in phases rather than all at
-once:
+The SDK's local capabilities (analysis templates, `market()`) are open for
+contribution — see the table below. Connectors and other new extension
+points aren't formalized yet: we're waiting for a few real proposals before
+designing an interface, rather than building a contract against nobody's
+actual use case and having to redo it later. See
+[Proposing a connector / new extension point](#proposing-a-connector--a-new-extension-point-not-yet-formalized)
+below for what to do if you want one anyway.
 
-- **Now**: the SDK's local capabilities (analysis templates, `market()`) are
-  open for contribution. The differential capability (`ask`, `ingest`,
-  `list_projects`, `generate_report`) isn't wired to a real backend yet —
-  see `CONTRACT.md`.
-- **Later**: once real contributions and requests show a pattern, we'll
-  formalize interfaces for connectors and other extension points. We're
-  intentionally not designing those upfront — see
-  [Proposing a connector / new extension point](#proposing-a-connector--a-new-extension-point-not-yet-formalized)
-  below for why, and what to do if you want one anyway.
-- **Eventually**: once the agent/RAG path is live in production, this SDK
-  becomes a real client for it, and `CONTRACT.md` grows to document that API.
-
-One important consequence of being early: `pragmas_sdk/analysis/` is
-currently a **hand-vendored copy** of the private core's own analysis
-modules, not something wired to it via API — see the module docstring in
-`pragmas_sdk/analysis/__init__.py` and `CONTRACT.md`'s "History" section.
-Changes you make here land in the SDK/CLI for everyone using them, but they
-don't automatically flow into the private core — a maintainer syncs that by
-hand. Worth knowing so you don't assume a bugfix here also fixes it upstream.
+One thing worth knowing: `pragmas_sdk/analysis/` is currently a
+**hand-vendored copy**, kept in sync by a maintainer rather than shared via
+import — see the module docstring in `pragmas_sdk/analysis/__init__.py` and
+`CONTRACT.md`'s "History" section. Changes you make here land in the SDK/CLI
+for everyone using them right away.
 
 ## What you can contribute today
 
@@ -52,7 +42,7 @@ hand. Worth knowing so you don't assume a bugfix here also fixes it upstream.
 | Bug fixes in existing templates / `client.py` / `models.py` | 🟢 open | |
 | Docs (README, CONTRACT.md, docstrings) | 🟢 open | Keep the 🟢/🟡/⚪ status legend honest — don't upgrade a status without checking the backend actually supports it |
 | New connector, exporter, or other new extension point | 🟡 open an issue first | Interface isn't formalized yet — see below |
-| Anything touching `ask`/`ingest`/`list_projects`/`generate_report` | ⚪ not yet | These target a backend that isn't live; wrapping them now would ship methods nobody can use |
+| Anything touching `ask`/`ingest`/`list_projects`/`generate_report` | ⚪ not yet | Not implemented in this SDK — out of scope for now |
 
 ### Adding an analysis template (Python)
 
@@ -120,11 +110,9 @@ pattern in this repo.
 
 ## What not to contribute here
 
-- Anything that requires knowledge of the private core's internals (RAG
-  behavior, LangGraph structure, agent prompts) — if you find yourself
-  guessing at how those work to make a PR here consistent with them, stop;
-  that's a sign the thing you're building belongs in a later phase, not this
-  one.
+- Anything that would require reimplementing the hosted AI agent (retrieval,
+  orchestration, prompts, document ingestion) — that's not part of this repo
+  and out of scope for a PR here.
 - API keys, tokens, or credentials of any kind, in code, tests, or examples.
 - Changes to `CONTRACT.md` that mark something 🟢 without it actually being
   verified live — the whole point of that file is that its status legend is
@@ -150,7 +138,7 @@ backend required for any of this.
 ## Opening a PR
 
 1. For anything beyond a small fix, open an issue first — saves you from
-   building something that doesn't fit the current phase (see above).
+   building something that's out of scope for this repo (see above).
 2. Branch off `master`, keep the PR focused on one thing.
 3. Make sure `pytest` passes locally.
 4. If you touched `README.md`'s status table or `CONTRACT.md`, make sure the

@@ -9,21 +9,16 @@ your own machine — no account required.**
 
 ## What is PRAGMAS?
 
-[PRAGMAS](https://pragmas.io) is a platform that turns a company's own
-documents and data into answers and ready-to-share reports, without anyone
-having to write SQL, build a dashboard, or learn a BI tool. Point it at your
-data, ask a question in plain language, get a report back.
+[PRAGMAS](https://pragmas.io) is about giving anyone the same rigor a
+financial analyst would apply — cash flow projections, SaaS metrics, unit
+economics, cohort retention — without building a dashboard, learning a BI
+tool, or writing SQL. Point it at your data, get the analysis back.
 
-**This package is one piece of that platform, not the whole thing** — the
-piece you can use right now, for free, with nothing to sign up for.
-`pragmas-sdk` is a Python client that runs a handful of PRAGMAS'
-financial-analysis templates and its public-research tool directly in your
-own code. No PRAGMAS account, no API key, no data ever sent to a PRAGMAS
-server. The rest of the platform — a conversational agent grounded in your
-documents, automatic ingestion, generated PDF/PPTX reports — is a separate,
-closed-source, hosted product that this SDK will grow into a client for
-later (see [What's next](#whats-next)). If you'd rather have a terminal
-command than write Python, see
+`pragmas-sdk` is the free, open-source Python client for that toolkit: a
+growing library of financial-analysis templates and a public-research tool
+that run entirely on your own machine. No account, no API key, no data ever
+sent anywhere — install it and use it, full stop. If you'd rather have a
+terminal command than write Python, see
 [`pragmas-cli`](https://github.com/pragmasg/pragmas-cli), built directly on
 top of this package.
 
@@ -72,11 +67,11 @@ is kept in sync with [`CONTRACT.md`](./CONTRACT.md), the source of truth.
 | `market(topic, max_results=5)` | locally | 🟢 works today, no network |
 | `join_waitlist(email)` | `POST /waitlist` | 🟢 live in production |
 | `request_beta_key(email)` | `POST /auth/beta-key` | 🟡 implemented backend-side, not deployed yet |
-| `ask()`, `ingest()`, `list_projects()`, `generate_report()` | — | ⚪ not wrapped yet — raise `PragmasNotImplementedError` |
+| `ask()`, `ingest()`, `list_projects()`, `generate_report()` | — | ⚪ not implemented in this SDK — raise `PragmasNotImplementedError` |
 
-🟢 works today · 🟡 targets a real backend endpoint that isn't live in
-production yet (works if you point `base_url` at a backend you're running
-yourself) · ⚪ no backend contract targeted yet in this SDK.
+🟢 works today, fully local · 🟡 needs a backend running at `base_url` (not
+publicly hosted yet — works against one you run yourself) · ⚪ not
+implemented in this SDK.
 
 ## `analyze()` templates
 
@@ -217,27 +212,27 @@ goes out, for methods that don't target a shipped endpoint yet.
 
 ## What's next
 
-Once a real backend is live in production and the agent/RAG path has been
-verified end-to-end, this SDK grows real methods for:
+This SDK's own roadmap, in order:
 
-- `ask` — the conversational agent, streaming
-- `ingest` — document upload (PDF/Excel/Word/PPTX/CSV)
-- `list_projects`
-- `generate_report` — PDF/PPTX report generation
+- More analysis templates, prioritized by real demand — see
+  [open issues](https://github.com/pragmasg/pragmas-sdk/issues).
+- Named data connectors (Shopify, HubSpot, GA4, Salesforce) so templates run
+  straight off your existing tools instead of a manual CSV export — see
+  [Where the data comes from](#where-the-data-comes-from--today-a-csv-next-a-connector)
+  above.
+- A universal file-adapter layer (xlsx/ods/tsv, flexible column names, header
+  detection) so templates aren't limited to a CSV with exact column names.
 
-Wrapping those before the backend can serve them would ship client methods
-nobody could actually use — so they raise `PragmasNotImplementedError` for
-now, on purpose, rather than being silently missing. `analyze()`/`market()`
-are staying local for good, not moving to the network later — see
-[CONTRACT.md](./CONTRACT.md) for why. Named connectors (Salesforce, GA4,
-Shopify, WordPress — see above) are the other big piece of the roadmap,
-independent of the agent work.
+`analyze()` and `market()` are staying local for good — that's a deliberate
+choice, not a placeholder (see [CONTRACT.md](./CONTRACT.md) for the reasoning).
+A handful of client methods (`ask`, `ingest`, `list_projects`,
+`generate_report`) are reserved for capabilities this SDK doesn't implement
+yet and raise `PragmasNotImplementedError` rather than failing silently.
 
 ## Give feedback
 
-This SDK exists to get its design right before the platform goes GA — the
-fastest way to influence it is to tell us what's awkward, missing, or
-surprising, including which connector you'd want first.
+Tell us what's awkward, missing, or surprising — including which connector
+or template you'd want first.
 [Open an issue](https://github.com/pragmasg/pragmas-sdk/issues).
 
 ## Development
